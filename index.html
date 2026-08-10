@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Video Generator — Script & Storyboard Factory</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #6366f1;
+            --accent-hover: #4f46e5;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --success: #10b981;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar h2 {
+            font-size: 1.2rem;
+            color: var(--accent-color);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        input, select, textarea {
+            background-color: var(--bg-color);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: 1px solid var(--accent-color);
+        }
+
+        button.btn-primary {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button.btn-primary:hover {
+            background-color: var(--accent-hover);
+        }
+
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+
+        header {
+            padding: 20px 32px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-badge {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            border: 1px solid var(--success);
+        }
+
+        .workspace {
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-card p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .stat-card h3 {
+            font-size: 1.4rem;
+            margin-top: 4px;
+        }
+
+        .scene-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .scene-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            display: grid;
+            grid-template-columns: 80px 1fr 1.5fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .scene-id {
+            font-weight: bold;
+            color: var(--accent-color);
+            text-align: center;
+            background: rgba(99, 102, 241, 0.1);
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        .scene-narration {
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        .scene-prompt {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            background-color: var(--bg-color);
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Factory Control</h2>
+        
+        <div class="form-group">
+            <label for="videoTitle">Judul Video (Rumus TSM)</label>
+            <textarea id="videoTitle" rows="3" placeholder="[Masalah] + [Solusi] + [Manfaat]"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="targetAudience">Target Penonton</label>
+            <input type="text" id="targetAudience" value="Usia 30-50 Tahun (Slice of Life)">
+        </div>
+
+        <div class="form-group">
+            <label for="videoDuration">Durasi Video</label>
+            <select id="videoDuration">
+                <option value="12">12 Menit (72 Scene + 30 B-Roll)</option>
+            </select>
+        </div>
+
+        <button class="btn-primary" onclick="generatePipeline()">Generate Script & Prompt</button>
+    </div>
+
+    <div class="main-content">
+        <header>
+            <div>
+                <h1>Dashboard Produksi Video</h1>
+                <p style="color: var(--text-muted); font-size: 0.85rem;">Engine TSM v3.0.1 (Ultra Hook Edition)</p>
+            </div>
+            <div class="status-badge" id="systemStatus">Ready / Standby</div>
+        </header>
+
+        <div class="workspace">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p>Total Scene</p>
+                    <h3 id="statScenes">72 Adegan</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Total B-Roll</p>
+                    <h3 id="statBRoll">30 Prompt</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Gaya Visual</p>
+                    <h3>2D Cartoon 16:9</h3>
+                </div>
+                <div class="stat-card">
+                    <p>Estimasi Durasi</p>
+                    <h3>12 Menit</h3>
+                </div>
+            </div>
+
+            <h2>Preview Storyboard (Sesi 1: Ultra Hook)</h2>
+            <div class="scene-container" id="sceneList"></div>
+        </div>
+    </div>
+
+    <script>
+        const sampleScenes = [
+            {
+                id: "S1-01",
+                narration: "Jam menunjukkan pukul dua malam, tapi mata kamu masih terbuka lebar menatap langit-langit kamar.",
+                prompt: "A 35-year-old adult lying awake in bed at 2 AM, looking stressed at the ceiling, close-up shot, 2D vector cartoon style, vivid colors, 16:9 ratio"
+            },
+            {
+                id: "S1-02",
+                narration: "Pikiran berputar memikirkan tagihan yang makin menumpuk dan gaji yang hanya numpang lewat.",
+                prompt: "Close-up on a stressed character holding a monthly bill, glowing smartphone screen nearby, 2D cartoon style, vivid colors, 16:9 ratio"
+            },
+            {
+                id: "S1-03",
+                narration: "Kamu mulai bertanya pada diri sendiri, sampai kapan situasi seperti ini harus terus berulang?",
+                prompt: "Medium shot of character sitting on the edge of the bed, head in hands, emotional expression, 2D cartoon style, vivid colors, 16:9 ratio"
+            }
+        ];
+
+        function renderScenes(scenes) {
+            const container = document.getElementById('sceneList');
+            container.innerHTML = '';
+
+            scenes.forEach(scene => {
+                const card = document.createElement('div');
+                card.className = 'scene-card';
+                card.innerHTML = `
+                    <div class="scene-id">${scene.id}</div>
+                    <div class="scene-narration">
+                        <strong>Narasi:</strong><br>
+                        "${scene.narration}"
+                    </div>
+                    <div class="scene-prompt">
+                        <strong>Visual Prompt:</strong><br>
+                        ${scene.prompt}
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function generatePipeline() {
+            const title = document.getElementById('videoTitle').value;
+            const status = document.getElementById('systemStatus');
+
+            if (!title) {
+                alert('Silakan isi Judul Video terlebih dahulu!');
+                return;
+            }
+
+            status.innerText = 'Processing...';
+            status.style.borderColor = '#f59e0b';
+            status.style.color = '#f59e0b';
+
+            setTimeout(() => {
+                status.innerText = 'Script & Prompts Generated';
+                status.style.borderColor = 'var(--success)';
+                status.style.color = 'var(--success)';
+                renderScenes(sampleScenes);
+            }, 1000);
+        }
+
+        renderScenes(sampleScenes);
+    </script>
+</body>
+</html>

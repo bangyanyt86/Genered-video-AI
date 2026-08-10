@@ -293,12 +293,26 @@
             status.style.borderColor = '#f59e0b';
             status.style.color = '#f59e0b';
 
-            setTimeout(() => {
-                status.innerText = 'Script & Prompts Generated';
-                status.style.borderColor = 'var(--success)';
-                status.style.color = 'var(--success)';
-                renderScenes(sampleScenes);
-            }, 1000);
+            fetch('https://bangyann.pagekite.me/generate', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ title: title.value })
+})
+.then(response => response.json())
+.then(data => {
+    status.innerText = 'Script & Prompts Generated!';
+    status.style.borderColor = 'var(--success)';
+    status.style.color = 'var(--success)';
+    if(data.scenes) renderScenes(data.scenes);
+})
+.catch(error => {
+    status.innerText = 'Gagal terhubung ke Termux!';
+    status.style.borderColor = '#ef4444';
+    status.style.color = '#ef4444';
+    console.error('Error:', error);
+});
         }
 
         renderScenes(sampleScenes);

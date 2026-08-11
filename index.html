@@ -292,11 +292,11 @@
             status.innerText = 'Processing...';
             status.style.borderColor = '#f59e0b';
             status.style.color = '#f59e0b';
-
-            fetch('https://uivpr-140-213-216-172.free.pinggy.net', {
+fetch('https://omkfx-140-213-216-172.run.pinggy-free.link', {
     method: 'POST',
     headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'X-Pinggy-No-Screen': 'true'
     },
     body: JSON.stringify({ title: title.value })
 })
